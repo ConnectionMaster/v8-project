@@ -6,8 +6,8 @@ A set of tools to work with V8 JavaScript engine. In particular it takes care of
 Getting the help
 ================
 
-For a brief description of the available functionality run `build.py` without parameters.  
-For a comprehensive overview of available commands and their options run `build.py --help`.  
+For a brief description of the available functionality run `build.py` without parameters.
+For a comprehensive overview of available commands and their options run `build.py --help`.
 Use `--help` to get detailed explaination of a command.
 
 
@@ -21,6 +21,13 @@ Building V8
 ===========
 
 In order to build V8 use the corresponding `build` command, e.g. `build.py build windows x64 debug`. The output is in the `{path to build.py}/build` directory.
+
+Git commits
+===========
+
+This repo uses [pre-commit](https://pre-commit.com) to maintain agreed conventions in the repo. It should
+be [installed](https://pre-commit.com/#installation) (tldr; `pip install pre-commit` then `pre-commit install`)
+before making any new commits to the repo.
 
 Gitlab Merge Requests
 =====================
