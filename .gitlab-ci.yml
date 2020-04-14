@@ -1,4 +1,5 @@
 ---
+image: "registry.gitlab.com/eyeo/docker/v8-project_gitlab-runner:202004.1"
 
 stages:
   - lint_commit
