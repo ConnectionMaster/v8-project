@@ -17,42 +17,28 @@ lint_commit:
 .job_template: &common_build_v8_lib
   stage: build
   before_script:
-# We build V8 for arm but it requires to run mksnapshot of the same bitness on the host, thus we need to run 32 bit mksnapshot. However in order to do it one has to install libc6:i386 because currently the host runns only 64 bit applications.
-# Add i386 arch in order to install libc6:i386.
     - sudo dpkg --add-architecture i386
     - sudo apt-get update
-    - sudo apt-get install -yyq python python3.6 build-essential libgtk2.0-dev libc6:i386
-    - python3.6 build.py sync
-
-build_v8_lib:x64-linux-debug:
-  <<: *common_build_v8_lib
-  script:
-    - python3.6 build.py build nix x64 debug
+    - sudo apt-get install -yyq python python3.6 build-essential libgtk2.0-dev libc6:i386 xz-utils
   artifacts:
     paths:
-      - build/linux.x64.debug/obj/libv8_monolith.a
+      - build/v8-bd6a44fb-includes.tar.xz
+      - build/v8-bd6a44fb-arm-android.tar.xz
+      - build/v8-bd6a44fb-arm64-android.tar.xz
+      - build/v8-bd6a44fb-ia32-android.tar.xz
+      - build/v8-bd6a44fb-x64-android.tar.xz
 
-build_v8_lib:ia32-android:
+build:
   <<: *common_build_v8_lib
   script:
-    - python3.6 build.py build android ia32
-  artifacts:
-    paths:
-      - build/android.ia32.release/obj/libv8_monolith.a
+    - make all
+  except:
+    - schedules
 
-build_v8_lib:arm-android:
+update:
   <<: *common_build_v8_lib
   script:
-    - python3.6 build.py build android arm
-  artifacts:
-    paths:
-      - build/android.arm.release/obj/libv8_monolith.a
-
-build_v8_lib:arm64-android:
-  <<: *common_build_v8_lib
-  script:
-    - python3.6 build.py build android arm64
-  artifacts:
-    paths:
-      - build/android.arm64.release/obj/libv8_monolith.a
-
+    - make update
+  only:
+    - master
+    - schedules

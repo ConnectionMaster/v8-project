@@ -1,48 +1,62 @@
 v8-project
 ==========
 
-A set of tools to work with V8 JavaScript engine. In particular it takes care of all platform specific peculiarities when one has to obtain a new version of V8 or build it for a particular platform.
+V8 build automation. This project and its CI/CD build the V8 JavaScript engine
+whenever a new stable release is published by checking every night
+[omahaproxy][1]. The resulting artifacts are then published to [eyeofiles][2].
 
-Getting the help
-================
-
-For a brief description of the available functionality run `build.py` without parameters.
-For a comprehensive overview of available commands and their options run `build.py --help`.
-Use `--help` to get detailed explaination of a command.
+**The scheduled gitlab job is supposed to fail often: it only succeeds when
+a new V8 stable version is available**.
 
 
-Getting V8
-==========
+How this works
+==============
 
-In order to get V8 run `build.py sync`, one can optionally specify the revision of V8 by adding `--revision SOME_REVISION`.
+The main entry point to build V8 is the [Makefile](./Makefile). The three main
+targets are:
 
+* **all** - download/sync the V8 source code from the Google repository and
+   build the archives in the `build/` folder.
 
-Building V8
-===========
+* **update** - checks first if the archives for the latest stable release
+   were already uploaded to [eyeofiles][2], if so the job fails, otherwise it
+   will execute the `all` target operations and build the archives.
 
-In order to build V8 use the corresponding `build` command, e.g. `build.py build windows x64 debug`. The output is in the `{path to build.py}/build` directory.
+* **clean** - clean up the project by removing the `build/` folder and the V8
+   sources in `third_party/`.
+
+The `Makefile` uses internally the following Python scripts:
+
+* [get-revision.py](./get-revision.py) - given a platform and a channel (stable,
+  beta, dev, canary), it retrieves the relative V8 commit hash from
+  [omahaproxy][1].
+
+* [files-do-not-exist.py](./files-do-not-exist.py) - given a set of urls as
+  positional arguments, the program will fail (exit code 1) if the latter are
+  all reachable (http status 200) or complete successfully if at least one of
+  the urls is not reachable. This is used in the `update` target to make it
+  fail in case the latest version of the files were already uploaded (based on
+  the file names).
+
+* [sync.py](./sync.py) - given a revision (a commit hash), it ensures that V8
+  source gets downloaded together with all the dependencies.
+
+* [build.py](./build.py) - given a target platform, a target architecture and
+  a build mode chosen between debug and release, it performs the library build.
+
+All the scripts support the traditional `--help` flag to get a brief
+description of their usage as standalone script.
+
 
 Git commits
 ===========
 
-This repo uses [pre-commit](https://pre-commit.com) to maintain agreed conventions in the repo. It should
-be [installed](https://pre-commit.com/#installation) (tldr; `pip install pre-commit` then `pre-commit install`)
-before making any new commits to the repo.
+This repo uses [pre-commit][3] to maintain agreed conventions in the repo. It
+should be [installed][4] (tldr; `pip install pre-commit` then
+`pre-commit install`) before making any new commits to the repo.
 
-Gitlab Merge Requests
-=====================
 
-The *master* branch reflects a stable (production-ready) state.
-
-In order to navigate between the stable states one can go over first parent commits.
-
-In order to ensure that any results obtained during the CI of a merge request are actually for the commit which is going to be considered stable there are several rules
-* only Fast-forward merge requests are allowed
-* CI firstly ensures that the changes are already properly merged onto the master branch
-
-What it means on practice
--------------------------
-
-If there is a relatively small change and no additional reviewing rounds, e.g. only updating of the todays default V8 version, or the everything is squashed into a single commit, then the merging is basically the adavancing of the *master* branch and artifacts obtained for the commit will be considered ready for use.
-
-If the reviewing of a merge request requires several rounds and/or an author decided to keep changes in small self-contained commits, then before sending an update of the merge request the author should perform the merging locally. If the author wants to keep the history of the merge request cleaner, namely without intermediate merge commits, then one may use force push to the feature branch of the merge request.
+[1]: https://omahaproxy.appspot.com/
+[2]: https://v8.eyeofiles.com/
+[3]: https://pre-commit.com
+[4]: https://pre-commit.com/#installation
