@@ -19,7 +19,7 @@ lint_commit:
   before_script:
     - sudo dpkg --add-architecture i386
     - sudo apt-get update
-    - sudo apt-get install -yyq python python3.6 build-essential libgtk2.0-dev libc6:i386 xz-utils
+    - sudo apt-get install -yyq python python3.6 python3-requests build-essential libgtk2.0-dev libc6:i386 xz-utils
   artifacts:
     paths:
       - build/v8-bd6a44fb-includes.tar.xz
