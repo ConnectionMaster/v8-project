@@ -1,44 +1,71 @@
 ---
-image: "registry.gitlab.com/eyeo/docker/v8-project_gitlab-runner:202004.1"
+.common:
+  tags:
+    - &BUILD_IMAGE "registry.gitlab.com/eyeo/docker/v8-project_gitlab-runner:202010.1"
 
 stages:
   - lint_commit
+  - needs_update
   - build
+  - publish
 
 lint_commit:
   stage: lint_commit
-  before_script:
-    - sudo apt-get update
-    - sudo apt-get install -yyq python3.6
+  image:
+    *BUILD_IMAGE
   script: python3.6 .gitlab-ci/check-first-parent.py
   except:
     - master
 
-.job_template: &common_build_v8_lib
-  stage: build
-  before_script:
-    - sudo dpkg --add-architecture i386
-    - sudo apt-get update
-    - sudo apt-get install -yyq python python3.6 python3-requests build-essential libgtk2.0-dev libc6:i386 xz-utils
+needs_update:
+  stage: needs_update
+  image:
+    *BUILD_IMAGE
+  script:
+    - make check_up_to_date ||
+      echo BASE_NAME=$(make get_base_name) > base_name.env
   artifacts:
-    paths:
-      - build/v8-bd6a44fb-includes.tar.xz
-      - build/v8-bd6a44fb-arm-android.tar.xz
-      - build/v8-bd6a44fb-arm64-android.tar.xz
-      - build/v8-bd6a44fb-ia32-android.tar.xz
-      - build/v8-bd6a44fb-x64-android.tar.xz
-
-build:
-  <<: *common_build_v8_lib
-  script:
-    - make all
-  except:
-    - schedules
-
-update:
-  <<: *common_build_v8_lib
-  script:
-    - make update
+    reports:
+      dotenv: base_name.env
   only:
     - master
     - schedules
+
+build:
+  stage: build
+  image:
+    *BUILD_IMAGE
+  dependencies:
+    - needs_update
+  script:
+    - |
+      set -x
+      if [ -z "$BASE_NAME" ]; then
+        echo "New base revision not found, nothing to do"
+        exit 0
+      fi
+      make all
+  artifacts:
+    paths:
+      - build/$BASE_NAME-*.tar.xz
+
+publish:
+  stage: publish
+  dependencies:
+    - needs_update
+    - build
+  variables:
+    DESTDIR: /var/www/v8.eyeofiles.com/$BASE_NAME
+  script:
+    - |
+      set -x
+      if [ -z "$BASE_NAME" ]; then
+        echo "New base revision not found, nothing to do"
+        exit 0
+      fi
+      mkdir -p $DESTDIR/
+      cp -av $CI_PROJECT_DIR/build/* $DESTDIR/
+  tags:
+    - eyeofiles-1
+  only:
+    - master

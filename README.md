@@ -12,18 +12,27 @@ a new V8 stable version is available**.
 How this works
 ==============
 
-The main entry point to build V8 is the [Makefile](./Makefile). The three main
+The main entry point to build V8 is the [Makefile](./Makefile). The main
 targets are:
 
 * **all** - download/sync the V8 source code from the Google repository and
    build the archives in the `build/` folder.
 
-* **update** - checks first if the archives for the latest stable release
-   were already uploaded to [eyeofiles][2], if so the job fails, otherwise it
-   will execute the `all` target operations and build the archives.
-
 * **clean** - clean up the project by removing the `build/` folder and the V8
    sources in `third_party/`.
+
+GitLab CI and the configuration in .gitlab-ci.yml is used to automate the
+updates.  There are extra targets in the Makefile to support building the
+Docker images used in the CI process and make sure idempotency is
+maintained:
+
+* **check_up_to_date** - checks if the archives for the latest stable release
+   were already uploaded to [eyeofiles][2].  If this fails, CI will execute
+   the `all` target operations and build the archives.
+
+* **foo_prerequisites** (where foo is "check" or "build") - makes sure the
+   Debian/Ubuntu prerequisite packages are installed in the same
+   environment, in order for the build to succeed.
 
 The `Makefile` uses internally the following Python scripts:
 
@@ -31,12 +40,13 @@ The `Makefile` uses internally the following Python scripts:
   beta, dev, canary), it retrieves the relative V8 commit hash from
   [omahaproxy][1].
 
-* [files-do-not-exist.py](./files-do-not-exist.py) - given a set of urls as
-  positional arguments, the program will fail (exit code 1) if the latter are
-  all reachable (http status 200) or complete successfully if at least one of
-  the urls is not reachable. This is used in the `update` target to make it
-  fail in case the latest version of the files were already uploaded (based on
-  the file names).
+* [remote-files-exist.py](./remote-files-exist.py) - given a set of urls as
+  positional arguments, the program will fail (with error output and exit
+  code 1) if any of the latter are unreachable (if the HTTP HEAD status is
+  not successful) or complete successfully if all of the urls are reachable.
+  This is used in the `needs_update` target, so CI will skip further work in
+  case the latest version of the files were already uploaded (based on the
+  file names).
 
 * [sync.py](./sync.py) - given a revision (a commit hash), it ensures that V8
   source gets downloaded together with all the dependencies.
