@@ -3,12 +3,15 @@ REVISION := $(shell python3 get-revision.py webview stable)
 SHORT_REVISION := $(shell echo $(REVISION)|cut -b1-8)
 BASE_NAME := v8-$(strip $(SHORT_REVISION))
 SUPPORTED_ANDROID_ARCHS := arm arm64 ia32 x64
-LIBRARY_FILES := $(foreach arch,$(SUPPORTED_ANDROID_ARCHS),$(BASE_NAME)-$(arch)-android.tar.xz)
+SUPPORTED_LINUX_ARCHS := ia32 x64
+LIBRARY_FILES := $(foreach arch,$(SUPPORTED_ANDROID_ARCHS),$(BASE_NAME)-$(arch)-android.tar.xz) \
+	$(foreach arch,$(SUPPORTED_LINUX_ARCHS),$(BASE_NAME)-$(arch)-linux.tar.xz)
 INCLUDES_FILE := $(BASE_NAME)-includes.tar.xz
 TARGETS := build/$(INCLUDES_FILE) $(foreach f,$(LIBRARY_FILES),build/$(f))
 URLS := $(foreach f,$(INCLUDES_FILE) $(LIBRARY_FILES),https://v8.eyeofiles.com/$(BASE_NAME)/$(f))
 
 get_arch_name=$(shell echo $1|cut -f3 -d'-')
+get_os_name=$(shell echo $1|tr '.' '-'|cut -f4 -d'-')
 
 all: $(TARGETS)
 
@@ -22,10 +25,11 @@ debug:
 clean:
 	@rm -rf build/
 
-build/v8-%-android.tar.xz: arch=$(call get_arch_name,$@)
-build/v8-%-android.tar.xz: $(V8_SOURCE_DIR)
-	@python3 build.py android $(arch) release
-	tar cJf $@ -C build/android.$(arch).release/obj libv8_monolith.a
+build/v8-%.tar.xz: arch=$(call get_arch_name,$@)
+build/v8-%.tar.xz: os=$(call get_os_name,$@)
+build/v8-%.tar.xz: $(V8_SOURCE_DIR)
+	python3 build.py $(os) $(arch) release
+	tar cJf $@ -C build/$(os).$(arch).release/obj libv8_monolith.a
 
 build/$(INCLUDES_FILE): $(V8_SOURCE_DIR)
 	@mkdir -p build

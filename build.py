@@ -68,7 +68,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(help='Target platform')
     add_build_v8_parser(subparsers, 'windows', ['i32', 'x64'], ['debug', 'release'])
-    add_build_v8_parser(subparsers, 'nix', ['ia32', 'x64'], ['debug', 'release'])
+    add_build_v8_parser(subparsers, 'linux', ['ia32', 'x64'], ['debug', 'release'])
     add_build_v8_parser(subparsers, 'android', ['arm', 'arm64', 'ia32', 'x64'], ['debug', 'release'])
     args = parser.parse_args()
     args.func(args)
