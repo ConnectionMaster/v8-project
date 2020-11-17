@@ -47,7 +47,8 @@ build:
       make all
   artifacts:
     paths:
-      - build/$BASE_NAME-*.tar.xz
+      - build/*.tar.xz
+      - build/info
 
 publish:
   stage: publish
