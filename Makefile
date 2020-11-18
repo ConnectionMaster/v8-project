@@ -5,10 +5,11 @@ BASE_NAME := v8-$(strip $(SHORT_REVISION))
 SUPPORTED_ANDROID_ARCHS := arm arm64 ia32 x64
 SUPPORTED_LINUX_ARCHS := ia32 x64
 LIBRARY_FILES := $(foreach arch,$(SUPPORTED_ANDROID_ARCHS),android-$(arch)-release.tar.xz) \
-	$(foreach arch,$(SUPPORTED_LINUX_ARCHS),$(foreach config,debug release,linux-$(arch)-$(config).tar.xz)) \
-	build/info
+	$(foreach arch,$(SUPPORTED_LINUX_ARCHS),$(foreach config,debug release,linux-$(arch)-$(config).tar.xz))
 INCLUDES_FILE := include.tar.xz
-TARGETS := build/$(INCLUDES_FILE) $(foreach f,$(LIBRARY_FILES),build/$(f))
+TARGETS := build/$(INCLUDES_FILE) \
+	$(foreach f,$(LIBRARY_FILES),build/$(f)) \
+	build/info
 URLS := $(foreach f,$(INCLUDES_FILE) $(LIBRARY_FILES),https://v8.eyeofiles.com/$(BASE_NAME)/$(f))
 
 get_arch_name=$(shell echo $1|tr "/." "-"|cut -f3 -d'-')
