@@ -8,7 +8,8 @@
   },
   "android": {
     "target_os":"\"android\"",
-    "v8_android_log_stdout": true
+    "v8_android_log_stdout": true,
+    "android_ndk_root": "\"/third_party/android-ndk-r20b\""
   },
   "windows": {
     "is_clang": false,

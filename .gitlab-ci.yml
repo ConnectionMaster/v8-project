@@ -1,7 +1,7 @@
 ---
 .common:
   tags:
-    - &BUILD_IMAGE "registry.gitlab.com/eyeo/docker/v8-project_gitlab-runner:202010.1"
+    - &BUILD_IMAGE "registry.gitlab.com/eyeo/docker/v8-project_gitlab-runner:202011.1"
 
 stages:
   - lint_commit
