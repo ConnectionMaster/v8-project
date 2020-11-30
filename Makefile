@@ -32,8 +32,11 @@ clean:
 build/%.tar.xz: arch=$(call get_arch_name,$@)
 build/%.tar.xz: os=$(call get_os_name,$@)
 build/%.tar.xz: configuration=$(call get_configuration_name,$@)
-build/%.tar.xz: $(V8_SOURCE_DIR)
+build/%.tar.xz:
+	python3 sync.py $(REVISION)
+	python3 v8-namespace-replace.py --action=replace --os=$(os)
 	python3 build.py $(os) $(arch) $(configuration)
+	python3 v8-namespace-replace.py --action=revert --os=$(os)
 	tar cJf $@ -C build/$(os).$(arch).$(configuration)/obj libv8_monolith.a
 
 build/$(INCLUDES_FILE): $(V8_SOURCE_DIR)
